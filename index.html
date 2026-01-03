@@ -1659,6 +1659,103 @@
         window.openModal = openModal;
         window.closeModal = closeModal;
 
+        window.isApplied = (ipoId) => {
+            const apps = JSON.parse(localStorage.getItem('myApplications') || '[]');
+            return apps.includes(ipoId);
+        };
+
+        window.toggleApplied = (ipoId) => {
+            let apps = JSON.parse(localStorage.getItem('myApplications') || '[]');
+            if (apps.includes(ipoId)) {
+                apps = apps.filter(id => id !== ipoId);
+            } else {
+                apps.push(ipoId);
+            }
+            localStorage.setItem('myApplications', JSON.stringify(apps));
+
+            const btn = document.getElementById(`btn-applied-${ipoId}`);
+            if (btn) {
+                const active = apps.includes(ipoId);
+                btn.classList.toggle('active', active);
+                btn.innerHTML = active ? '✅ APPLIED' : '✚ MARK AS APPLIED';
+            }
+        };
+
+        window.showPremiumGraph = (id) => {
+            const ipo = IPO_LIST.find(i => i.id === id);
+            const chartSection = document.getElementById('chart-section');
+            if (chartSection) {
+                chartSection.style.display = 'block';
+                chartSection.scrollIntoView({ behavior: 'smooth' });
+                renderGmpChart(ipo);
+            }
+        };
+
+        function renderGmpChart(ipo) {
+            const ctx = document.getElementById('gmpChart')?.getContext('2d');
+            if (!ctx) return;
+
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+
+            const history = ipo.gmpHistory || [];
+            if (history.length === 0) {
+                history.push({
+                    gmp: ipo.gmp || "0",
+                    timestamp: Date.now()
+                });
+            }
+
+            const labels = history.map(h => {
+                return new Date(h.timestamp).toLocaleString('en-IN', {
+                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                });
+            });
+
+            const data = history.map(h => {
+                const val = h.gmp.replace(/[+₹%,]/g, '');
+                return parseFloat(val) || 0;
+            });
+
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Premium',
+                        data: data,
+                        borderColor: '#0ea5e9',
+                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#0ea5e9',
+                        pointRadius: 4,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: '#2a3140' },
+                            ticks: { color: '#9aa0a6' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#9aa0a6', maxRotation: 45, minRotation: 45, font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+
         function openModal(ipo) {
             const modal = document.getElementById('detail-modal');
             const modalBody = document.getElementById('modal-body');
@@ -1667,24 +1764,225 @@
             modalBody.innerHTML = `
                 <div class="detail-section">
                     <div class="section-title">IPO Details</div>
-                    <div class="detail-row"><span class="detail-label">Total Issue Size</span><span class="detail-value">${ipo.issueSize || "—"}</span></div>
-                    <div class="detail-row"><span class="detail-label">Price Band</span><span class="detail-value">₹${(ipo.priceBand || "—").replace('Rs.', '').replace('Rs', '').trim()}</span></div>
-                    <div class="detail-row"><span class="detail-label">Lot Size</span><span class="detail-value">${ipo.lotSize || "—"}</span></div>
-                    <div class="detail-row"><span class="detail-label">Listing At</span><span class="detail-value">${ipo.exchange || "—"}</span></div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Issue Size</span>
+                        <span class="detail-value">${ipo.issueSize || "—"}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Price Band</span>
+                        <span class="detail-value">₹${(ipo.priceBand || "—").replace('Rs.', '').replace('Rs', '').trim()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Lot Size</span>
+                        <span class="detail-value">${ipo.lotSize || "—"}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Min Investment</span>
+                        <span class="detail-value">₹${(ipo.minInvestment || "—").replace('Rs.', '').replace('Rs', '').trim()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Listing At</span>
+                        <span class="detail-value">${ipo.exchange || "—"}</span>
+                    </div>
+                    ${ipo.listingPrice ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Listing Price</span>
+                        <span class="detail-value" style="color:var(--accent-green);">₹${ipo.listingPrice.replace('Rs.', '').replace('Rs', '').trim()}</span>
+                    </div>
+                    ` : ""}
+                    ${ipo.currentPrice ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Current Price</span>
+                        <span class="detail-value" style="color:var(--accent-red);">₹${ipo.currentPrice.replace('Rs.', '').replace('Rs', '').trim()}</span>
+                    </div>
+                    ` : ""}
+                    ${ipo.listingGains ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Listing Gains</span>
+                        <span style="color:var(--accent-green); font-weight:700;">${ipo.listingGains}</span>
+                    </div>
+                    ` : ""}
                 </div>
+                
+                ${ipo.status !== 'upcoming' ? `
                 <div class="detail-section">
                     <div class="section-title">Subscription Details</div>
                     <table class="detail-table">
-                        <thead><tr><th>Category</th><th>Times</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Times</th>
+                            </tr>
+                        </thead>
                         <tbody>
-                            <tr><td>QIB</td><td>${ipo.qib || "—"}</td></tr>
-                            <tr><td>NII</td><td>${ipo.nii || "—"}</td></tr>
-                            <tr><td>Retail</td><td>${ipo.retail || "—"}</td></tr>
-                            <tr><td><strong>Total</strong></td><td><strong>${ipo.subscribers || "—"}</strong></td></tr>
+                            <tr>
+                                <td>QIB</td>
+                                <td>${ipo.qib || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>NII</td>
+                                <td>${ipo.nii || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>Retail</td>
+                                <td>${ipo.retail || "—"}</td>
+                            </tr>
+                            ${ipo.board.toLowerCase() === 'sme' ? `
+                            <tr>
+                                <td>Anchor</td>
+                                <td>${ipo.anchorSubs || "—"}</td>
+                            </tr>
+                            ` : ''}
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td><strong>${ipo.subscribers || "—"}</strong></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
+                ` : ''}
+                
+                <div class="detail-section">
+                    <div class="section-title">Lot(s) Distribution</div>
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Individual</th>
+                                <th>HNI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Min Share</td>
+                                <td>${ipo.lotIndMinShare || "—"}</td>
+                                <td>${ipo.lotHniMinShare || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>Min Amount</td>
+                                <td>${ipo.lotIndMinAmt || "—"}</td>
+                                <td>${ipo.lotHniMinAmt || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Lots</td>
+                                <td>${ipo.lotIndTotalLots || "—"}</td>
+                                <td>${ipo.lotHniTotalLots || "—"}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="section-title">IPO Reservation</div>
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Shares Offered</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>HNI</td>
+                                <td>${ipo.resHniShares || "—"}</td>
+                                <td>${ipo.resHniPct || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>INDIVIDUAL</td>
+                                <td>${ipo.resIndShares || "—"}</td>
+                                <td>${ipo.resIndPct || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>Market Maker</td>
+                                <td>${ipo.resMmShares || "—"}</td>
+                                <td>${ipo.resMmPct || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>QIB</td>
+                                <td>${ipo.resQibShares || "—"}</td>
+                                <td>${ipo.resQibPct || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td>Anchor</td>
+                                <td>${ipo.resAnchorShares || "—"}</td>
+                                <td>${ipo.resAnchorPct || "—"}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td><strong>${ipo.resTotalShares || "—"}</strong></td>
+                                <td><strong>${ipo.resTotalPct || "100.00%"}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="detail-section" style="margin-top: 8px;">
+                    <div class="section-title">Quick Actions</div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        ${ipo.drhpUrl ? `
+                            <a href="${ipo.drhpUrl}" target="_blank" class="btn btn-light-blue" style="width: 100%; text-decoration: none;">DRHP / RHP PDF FILE</a>
+                        ` : ''}
+                        
+                        <button class="btn btn-light-blue" style="width: 100%;" onclick="showPremiumGraph('${ipo.id}')">PREMIUM GRAPH (GMP)</button>
+                        
+                        <button id="btn-applied-${ipo.id}" class="btn-applied ${isApplied(ipo.id) ? 'active' : ''}" onclick="toggleApplied('${ipo.id}')" style="margin-top: 4px;">
+                            ${isApplied(ipo.id) ? '✅ APPLIED' : '✚ MARK AS APPLIED'}
+                        </button>
+                    </div>
+                </div>
+
+                <div id="chart-section" style="display:none;">
+                    <div class="detail-section">
+                        <div class="section-title">Premium Chart</div>
+                        <div class="chart-container">
+                            <canvas id="gmpChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                ${ipo.highlights ? `
+                <div class="detail-section">
+                    <div class="section-title">Key Highlights</div>
+                    <ul class="highlights-list">
+                        ${(Array.isArray(ipo.highlights) ? ipo.highlights : ipo.highlights.split('\n')).filter(h => h.trim()).map(h => `<li>${h}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                <div class="detail-section">
+                    <div class="section-title">Registrar</div>
+                    <div class="detail-row">
+                        <span class="detail-label">Name</span>
+                        <span class="detail-value">${ipo.registrar || "—"}</span>
+                    </div>
+                </div>
+                
+                ${ipo.leadManagers ? `
+                <div class="detail-section">
+                    <div class="section-title">Lead Manager(s)</div>
+                    <div class="detail-value" style="font-size: 13px; color: var(--text-primary); font-weight: 500;">${ipo.leadManagers}</div>
+                </div>
+                ` : ''}
+                
+                <div class="detail-section">
+                    <div class="section-title">About Company</div>
+                    ${ipo.description ? `
+                    <div style="font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:8px;">Short Description:</div>
+                    <p style="font-size:13px; line-height:1.6; color:var(--text-secondary); margin-bottom:16px; border-left: 3px solid var(--accent-blue); padding-left: 10px;">
+                        ${ipo.description}
+                    </p>
+                    ` : ''}
+                    
+                    ${ipo.business ? `
+                    <div style="font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:8px;">Detailed Business:</div>
+                    <p style="font-size:13px; line-height:1.6; color:var(--text-secondary);">
+                        ${ipo.business}
+                    </p>
+                    ` : (!ipo.description ? 'No information available.' : '')}
+                </div>
             `;
+
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
