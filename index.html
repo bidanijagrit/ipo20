@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPO JSS - Live IPO Updates</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a1f29;
+            --bg-card: #1e2530;
+            --border-color: #2a3140;
+            --text-primary: #e8eaed;
+            --text-secondary: #9aa0a6;
+            --text-muted: #6c757d;
+            --accent-green: #10b981;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            inset: 0;
+            background: #0f1419;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeOut 0.6s ease-in-out 2.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        .splash-logo {
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            animation: logoFadeIn 0.8s ease-out;
+            padding: 10px;
+        }
+
+        @keyframes logoFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .splash-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .splash-text {
+            color: white;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            animation: textFadeIn 0.8s ease-out 0.3s backwards;
+        }
+
+        @keyframes textFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .splash-subtitle {
+            display: none;
+        }
+
+        .splash-tagline {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: textFadeIn 0.8s ease-out 0.7s backwards;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .header-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+
+        .icon-btn:hover {
+            background: var(--border-color);
+        }
+
+        .notification-badge {
+            position: relative;
+        }
+
+        .notification-badge::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-red);
+            border-radius: 50%;
+        }
+
+        /* Search Modal */
+        .search-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1001;
+            padding: 20px;
+        }
+
+        .search-modal.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 65px;
+            z-index: 99;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 14px 16px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+        }
+
+        .tab.active[data-status="open"] {
+            color: var(--accent-green);
+            border-bottom-color: var(--accent-green);
+        }
+
+        .tab.active[data-status="upcoming"] {
+            color: var(--accent-orange);
+            border-bottom-color: var(--accent-orange);
+        }
+
+        .tab.active[data-status="closed"] {
+            color: var(--accent-red);
+            border-bottom-color: var(--accent-red);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: var(--bg-secondary);
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 113px;
+            z-index: 98;
+        }
+
+        .filter-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .board-filters {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .board-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .board-filter input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+        }
+
+        .board-filter label {
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Sort button removed as requested */
+
+        .active-filter-badge {
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg-primary);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 12px 8px;
+        }
+
+        /* IPO Cards */
+        .ipo-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 40px;
+            transition: all 0.2s;
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+            /* Disable text selection */
+            -webkit-user-select: none;
+        }
+
+        .ipo-card:hover {
+            border-color: #3b82f6;
+        }
+
+        .card-header {
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 12px;
+        }
+
+        .company-name-full {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .card-main-content {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .company-logo {
+            width: 85px;
+            height: 85px;
+            border-radius: 14px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            padding: 4px;
+        }
+
+        .company-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .info-grid-simple {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-top: 4px;
+        }
+
+        .info-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 15px;
+            gap: 10px;
+        }
+
+        .info-label-side {
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .info-value-side {
+            font-weight: 500;
+            color: var(--text-primary);
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 12px 0;
+        }
+
+        .gmp-row {
+            padding: 8px 0;
+        }
+
+        .dates-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .card-actions {
+            display: grid;
+            grid-template-columns: 1fr 54px 1.4fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            height: 46px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-view {
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-share-icon {
+            background: #0ea5e9;
+            color: #ffffff;
+            padding: 0;
+            width: 54px;
+        }
+
+        .btn-allotment {
+            background: #0ea5e9;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .btn-disabled {
+            background: #2a3140 !important;
+            color: #6c757d !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-light-blue {
+            background: #0ea5e9;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .btn-light-blue:hover {
+            background: #0284c7;
+        }
+
+        .disclaimer-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            text-align: left;
+        }
+
+        .board-badge {
+            margin: 16px -22px -22px -22px;
+            padding: 12px;
+            border-radius: 0 0 12px 12px;
+            font-weight: 800;
+            font-size: 14px;
+            text-transform: uppercase;
+            text-align: center;
+            color: #fff;
+        }
+
+        .board-badge.mainboard {
+            background: #0ea5e9;
+        }
+
+        .board-badge.sme {
+            background: #f97316;
+        }
+
+        /* Notification Center */
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(14, 165, 233, 0.2);
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .notification-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal-content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        @media (max-width: 640px) {
+            .modal {
+                padding: 0;
+            }
+
+            .modal-content {
+                border-radius: 0;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            z-index: 10;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .btn-close:hover {
+            background: var(--bg-card);
+        }
+
+        .modal-body {
+            padding: 16px 8px;
+        }
+
+        .detail-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .detail-table th,
+        .detail-table td {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .detail-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .highlights-list {
+            list-style: none;
+        }
+
+        .highlights-list li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .highlights-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+            .card-info {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .filter-section {
+                top: 65px;
+            }
+
+            .tabs {
+                top: 65px;
+            }
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #111827;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+            border-top: 1px solid var(--border-color);
+            z-index: 999;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: #fbbf24;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* Chart Canvas Style */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin-top: 20px;
+            background: #111827;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .gmp-last-heard {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Live Watch Modal */
+        .live-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 2000;
+            overflow-y: auto;
+            color: #fff;
+        }
+
+        .live-modal.active {
+            display: block;
+        }
+
+        .live-header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 2px solid #1f2937;
+        }
+
+        .live-back-btn {
+            font-size: 24px;
+            cursor: pointer;
+            margin-right: 16px;
+        }
+
+        .live-ticker-info {
+            flex: 1;
+            text-align: center;
+        }
+
+        .live-exchange-tabs {
+            display: flex;
+            background: #1f2937;
+            border-radius: 4px;
+            margin: 16px;
+            overflow: hidden;
+        }
+
+        .live-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-weight: 700;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .live-tab.active {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .live-price-section {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #111;
+        }
+
+        .price-box {
+            text-align: center;
+        }
+
+        .price-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #10b981;
+        }
+
+        .price-change {
+            font-size: 14px;
+            color: #10b981;
+            margin-top: 4px;
+        }
+
+        .live-action-btn {
+            background: #10b981;
+            color: #fff;
+            width: calc(100% - 32px);
+            margin: 0 16px;
+            padding: 14px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-align: center;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .market-depth {
+            padding: 16px;
+        }
+
+        .depth-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .depth-table th {
+            color: #9ca3af;
+            font-weight: 500;
+            padding: 8px 4px;
+            text-align: left;
+        }
+
+        .depth-table td {
+            padding: 8px 4px;
+        }
+
+        .side-buy {
+            color: #3b82f6;
+        }
+
+        .side-sell {
+            color: #ef4444;
+        }
+
+        .days-range-section {
+            padding: 20px 16px;
+            border-top: 1px solid #1f2937;
+        }
+
+        .range-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .range-slider-bg {
+            height: 6px;
+            background: #374151;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .range-slider-fill {
+            position: absolute;
+            height: 100%;
+            background: #10b981;
+            border-radius: 3px;
+        }
+
+        .range-marker {
+            position: absolute;
+            width: 4px;
+            height: 12px;
+            background: #10b981;
+            top: -3px;
+        }
+
+        .stats-grid {
+            padding: 16px;
+            border-top: 1px solid #1f2937;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #1f2937;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #9ca3af;
+        }
+
+        .stat-value {
+            font-weight: 600;
+        }
+
+        /* Pull to Refresh */
+        .ptr-container {
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .ptr-indicator {
+            position: absolute;
+            top: -50px;
+            left: 0;
+            right: 0;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            color: var(--accent-blue);
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .ptr-refreshing .ptr-indicator {
+            transform: translateY(50px);
+        }
+
+        .ptr-refreshing main {
+            transform: translateY(50px);
+            transition: transform 0.2s;
+        }
+    </style>
+</head>
+
+<body class="ptr-container">
+    <div class="ptr-indicator" id="ptr-indicator">
+        <span id="ptr-text">Pull to refresh...</span>
+    </div>
+
+    <!-- Splash Screen -->
+    <div class="splash-screen">
+        <div class="splash-logo">
+            <img src="https://i.postimg.cc/DSLRTB8m/file-00000000ff4471fd807ff67a7c231bf8-2.png" alt="IPO JSS Logo">
+        </div>
+        <div class="splash-text">IPO JSS</div>
+        <div class="splash-subtitle">Live IPO Updates & Analysis</div>
+        <div class="splash-tagline">Trade Smart . Trade GMP</div>
+    </div>
+
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-logo">
+                    <img src="https://i.postimg.cc/DSLRTB8m/file-00000000ff4471fd807ff67a7c231bf8-2.png" alt="IPO JSS">
+                </div>
+                <div class="header-title">
+                    <h1>IPO JSS</h1>
+                    <div class="header-subtitle">Trade Smart . Trade GMP</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="icon-btn" onclick="openSearch()" title="Search IPOs">
+                    🔍
+                </div>
+                <div class="icon-btn notification-badge" onclick="showNotifications()" title="Notifications">
+                    🔔
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" data-status="open" onclick="setFilter('open')">OPEN</button>
+        <button class="tab" data-status="upcoming" onclick="setFilter('upcoming')">UPCOMING</button>
+        <button class="tab" data-status="closed" onclick="setFilter('closed')">CLOSED</button>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-content">
+            <div class="board-filters">
+                <div class="board-filter">
+                    <input type="checkbox" id="mainboard-filter" checked onchange="applyFilter()">
+                    <label for="mainboard-filter">MAINBOARD</label>
+                </div>
+                <div class="board-filter">
+                    <input type="checkbox" id="sme-filter" checked onchange="applyFilter()">
+                    <label for="sme-filter">SME</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="active-filter-badge" id="filter-badge"></div>
+
+    <main id="container"></main>
+
+    <div class="empty" id="empty" hidden>No IPO found. Try changing filters.</div>
+
+    <!-- Search Modal -->
+    <div class="search-modal" id="search-modal">
+        <div class="search-header">
+            <input type="text" class="search-input" id="search-input" placeholder="Search IPO by name..." autofocus>
+            <button class="icon-btn" onclick="closeSearch()">✕</button>
+        </div>
+        <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Live Watch Modal -->
+    <div class="live-modal" id="live-modal">
+        <div class="live-header">
+            <span class="live-back-btn" onclick="closeLiveModal()">←</span>
+            <div class="live-ticker-info">
+                <div id="live-ticker-name" style="font-weight:800; font-size:18px;">—</div>
+                <div id="live-ticker-full" style="font-size:12px; color:#9ca3af;">—</div>
+            </div>
+        </div>
+
+        <div class="live-exchange-tabs">
+            <div class="live-tab active" id="tab-nse" onclick="switchExchange('NSE')">NSE</div>
+            <div class="live-tab" id="tab-bse" onclick="switchExchange('BSE')">BSE</div>
+        </div>
+
+        <div class="live-price-section">
+            <div class="price-box">
+                <div id="live-price" class="price-value" style="font-size:32px; color:#10b981;">—</div>
+                <div id="live-change" class="price-change" style="font-size:16px; color:#10b981;">—</div>
+            </div>
+        </div>
+
+        <div class="live-action-btn">ADD TO WATCHLIST</div>
+
+        <div class="market-depth">
+            <table class="depth-table">
+                <thead>
+                    <tr>
+                        <th>Qty</th>
+                        <th>BUY</th>
+                        <th>SELL</th>
+                        <th>Qty</th>
+                    </tr>
+                </thead>
+                <tbody id="depth-body">
+                </tbody>
+                <tfoot>
+                    <tr style="border-top: 1px solid #1f2937;">
+                        <td colspan="2" style="font-weight:700; padding-top:10px;">Total Shares</td>
+                        <td colspan="2" id="live-total-shares"
+                            style="text-align:right; font-weight:700; color:#ef4444; padding-top:10px;">1,107</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="days-range-section">
+            <div class="range-label">
+                <span id="live-day-low" style="font-size:14px;">₹ 0.00</span>
+                <span id="live-day-high" style="font-size:14px;">₹ 0.00</span>
+            </div>
+            <div class="range-slider-bg">
+                <div id="live-range-fill" class="range-slider-fill" style="left:20%; width:30%;"></div>
+                <div id="live-range-marker" class="range-marker" style="left:45%;"></div>
+            </div>
+            <div class="range-label" style="margin-top:20px;">
+                <span style="font-size:12px; color:#9ca3af;">Open</span>
+                <span id="live-open" style="font-size:12px;">—</span>
+                <span style="font-size:12px; color:#9ca3af;">Prev. close</span>
+                <span id="live-prev-close" style="font-size:12px;">—</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-row">
+                <span class="stat-label">Volume</span>
+                <span id="live-volume" class="stat-value">—</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Avg. trade price</span>
+                <span id="live-avg-price" class="stat-value">—</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Last trade quantity</span>
+                <span id="live-last-qty" class="stat-value">—</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Last traded at</span>
+                <span id="live-last-time" class="stat-value">—</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Lower circuit</span>
+                <span id="live-lower" class="stat-value" style="color:#9ca3af;">—</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Upper circuit</span>
+                <span id="live-upper" class="stat-value" style="color:#9ca3af;">—</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">52W high</span>
+                <span id="live-52high" class="stat-value" style="color:#9ca3af;">—</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">52W low</span>
+                <span id="live-52low" class="stat-value" style="color:#9ca3af;">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="modal" id="notif-modal">
+        <div class="modal-content" style="max-height: 80vh;">
+            <div class="modal-header">
+                <div class="modal-title">Recent Updates</div>
+                <button class="btn-close" onclick="closeNotif()">&times;</button>
+            </div>
+            <div class="modal-body" id="notif-list" style="padding:0;">
+                <div class="muted" style="padding:20px; text-align:center;">No recent updates</div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-company-name"></div>
+                <button class="btn-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="location.reload()" style="flex:1;">
+            <span class="nav-icon">🏠</span>
+            <span>IPO</span>
+        </div>
+        <div class="nav-item" onclick="showToast('Coming Soon')" style="flex:1;">
+            <div
+                style="background: var(--accent-blue); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: -15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #111827;">
+                <span class="nav-icon" style="color: white; font-size: 22px; margin-bottom: 0;">👤</span>
+            </div>
+            <span style="margin-top: 20px;">Account</span>
+        </div>
+        <div class="nav-item" onclick="showToast('Coming Soon')" style="flex:1;">
+            <span class="nav-icon">📢</span>
+            <span>Allotment</span>
+        </div>
+    </nav>
+
+    <!-- Firebase v9 CDN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLlAwpMV-sAEFYxBPPFyS_K_AxN1S-hYs",
+            authDomain: "ipo-jss-94f8a.firebaseapp.com",
+            databaseURL: "https://ipo-jss-94f8a-default-rtdb.firebaseio.com",
+            projectId: "ipo-jss-94f8a",
+            storageBucket: "ipo-jss-94f8a.firebasestorage.app",
+            messagingSenderId: "640345356664",
+            appId: "1:640345356664:web:737575296bd778424e308d",
+            measurementId: "G-6YFSTHR8H5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Static IPO Data (Fallback)
+        const DEFAULT_IPO_LIST = [
+            {
+                name: "Rurih Industries",
+                status: "closed",
+                board: "Mainboard",
+                openDate: "02 Dec 2025",
+                closeDate: "05 Dec 2025",
+                priceBand: "₹120 - ₹128",
+                lotSize: "80 shares",
+                issueSize: "₹650 Cr",
+                allotment: "09 Dec 2025",
+                listing: "12 Dec 2025",
+                gmp: "+18%",
+                listingGains: "+15.4%",
+                subscribers: "3.8x",
+                qib: "5.1x",
+                nii: "3.0x",
+                retail: "2.2x",
+                description: "Specialty chemicals manufacturer with export focus.",
+                sector: "Chemicals",
+                exchange: "NSE | BSE",
+                business: "Aromatic intermediates & performance additives",
+                registrar: "KFintech",
+                leadManagers: "Axis Capital, ICICI Securities",
+                website: "#",
+                highlights: [
+                    "70% capacity utilisation; brownfield expansion underway",
+                    "Long-term contracts with EU agrochemical majors",
+                    "EBITDA margin 18.5%, ROCE 19% (FY25)"
+                ]
+            }
+        ];
+
+        let IPO_LIST = DEFAULT_IPO_LIST;
+        let currentFilter = 'open';
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #1e2530;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                z-index: 10000;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                animation: slideUp 0.3s ease-out;
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideDown 0.3s ease-out';
+                setTimeout(() => { if (toast.parentNode) document.body.removeChild(toast); }, 300);
+            }, 2000);
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        function getLogoColor(index) {
+            const colors = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            ];
+            return colors[index % colors.length];
+        }
+
+        function getGmpColor(gmp) {
+            if (!gmp || gmp === '—' || gmp === '0' || gmp === '0%') return '#ffffff';
+            if (gmp.includes('+')) return '#22c55e'; // Green
+            if (gmp.includes('-')) return '#ef4444'; // Red
+            return '#ffffff';
+        }
+
+        function renderIPOs(list) {
+            const container = document.getElementById('container');
+            const empty = document.getElementById('empty');
+            container.innerHTML = '';
+            if (list.length === 0) {
+                empty.hidden = false;
+                return;
+            }
+            empty.hidden = true;
+            list.forEach((ipo, index) => {
+                const card = document.createElement('div');
+                card.className = 'ipo-card';
+                const isListed = ipo.status.toLowerCase() === 'closed' && ipo.listingGains && ipo.listingGains !== '—';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="company-name-full">${ipo.name} (${ipo.board.toUpperCase()})</div>
+                    </div>
+                    <div class="card-main-content">
+                        <div class="company-logo" style="${ipo.logoUrl ? `background: white;` : `background: ${getLogoColor(index)};`}">
+                            ${ipo.logoUrl ? `<img src="${ipo.logoUrl}" alt="logo">` : getInitials(ipo.name)}
+                        </div>
+                        <div class="info-grid-simple">
+                            <div class="info-item-row"><span class="info-label-side">Date:</span><span class="info-value-side">${ipo.openDate || ipo.open} - ${ipo.closeDate || ipo.close}</span></div>
+                            <div class="info-item-row"><span class="info-label-side">Price:</span><span class="info-value-side">₹${(ipo.priceBand || "").replace('Rs.', '').replace('Rs', '').trim()}</span></div>
+                            <div class="info-item-row"><span class="info-label-side">Lot Size:</span><span class="info-value-side">${ipo.lotSize || ipo.lot}</span></div>
+                            <div class="info-item-row"><span class="info-label-side">Issue Size:</span><span class="info-value-side" style="font-weight:700;">₹${(ipo.issueSize || "").replace('Rs.', '').replace('Rs', '').trim()}</span></div>
+                        </div>
+                    </div>
+                    <div class="section-divider"></div>
+                    ${!isListed ? `
+                    <div class="gmp-row">
+                        <div class="info-item-row">
+                            <span class="info-label-side">GMP Rumors*:</span>
+                            <span class="gmp-value" style="font-size:16px; color: ${getGmpColor(ipo.gmp)}">${ipo.gmp}</span>
+                        </div>
+                        ${ipo.lastHeard ? `<div class="gmp-last-heard">Last Heard: <span style="float:right;">${ipo.lastHeard}</span></div>` : ''}
+                    </div>
+                    <div class="section-divider"></div>
+                    ` : ''}
+                    <div class="dates-section" style="${isListed ? 'margin-bottom:0px;' : ''}">
+                        <div class="info-item-row"><span class="info-label-side">Allotment Date</span><span class="info-value-side">${ipo.allotment}</span></div>
+                        <div class="info-item-row"><span class="info-label-side">Listing Date</span><span class="info-value-side">${ipo.listing}</span></div>
+                        ${!isListed ? `
+                        <div class="info-item-row"><span class="info-label-side">GMP x Lots (IND)*</span><span class="info-value-side" style="color:var(--accent-orange); font-weight:700;">${ipo.gmpXInd || '0'}</span></div>
+                        <div class="info-item-row"><span class="info-label-side">GMP x Lots (HNI)*</span><span class="info-value-side" style="color:var(--accent-orange); font-weight:700;">${ipo.gmpXHni || '0'}</span></div>
+                        ` : `
+                        <div class="section-divider"></div>
+                        <div class="info-item-row" style="margin-bottom: 5px;">
+                            <span class="info-label-side">Listing Price (BSE)</span>
+                            <span class="info-value-side" style="color:#10b981; font-weight:700;">
+                                ${ipo.listingPrice && ipo.listingPrice !== '—' ? `₹${ipo.listingPrice.replace('Rs.', '').replace('Rs', '').trim()}` : ''}
+                                ${ipo.listingGains ? ` (${ipo.listingGains})` : ''}
+                                ${!ipo.listingPrice && !ipo.listingGains ? '—' : ''}
+                            </span>
+                        </div>
+                        <div class="info-item-row">
+                            <span class="info-label-side">Current Price (BSE)*</span>
+                            <span class="info-value-side" style="color:#10b981; font-weight:700;">
+                                ${ipo.currentPrice && ipo.currentPrice !== '—' ? `₹${ipo.currentPrice.replace('Rs.', '').replace('Rs', '').trim()}` : ''}
+                                ${ipo.currentGains ? ` (${ipo.currentGains})` : ''}
+                                ${!ipo.currentPrice && !ipo.currentGains ? '—' : ''}
+                            </span>
+                        </div>
+                        `}
+                    </div>
+                    <div class="card-actions" style="grid-template-columns: 1fr 54px 1.4fr;">
+                        <button class="btn btn-view" onclick="openModalById('${ipo.id}')">VIEW</button>
+                        <button class="btn btn-share-icon" onclick="shareByIpoId('${ipo.id}', event)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        </button>
+                        ${ipo.status.toLowerCase() === 'closed' ? `
+                            <button onclick="showToast('Coming Soon')" class="btn btn-allotment" style="background:#10b981;">ALLOTMENT</button>
+                        ` : `
+                            <a href="https://web.stockedge.com/ipo" target="_blank" class="btn btn-allotment">APPLY</a>
+                        `}
+                    </div>
+                    ${isListed ? `
+                    <div style="margin-top: 10px;">
+                        <button onclick="openLiveWatch('${ipo.id}')" class="btn btn-light-blue" style="width:100%; background: #0ea5e9; height: 50px; font-size: 16px;">WATCH LIVE</button>
+                    </div>
+                    ` : ''}
+                    <div class="disclaimer-text">${isListed ? '* Data may be delayed.' : '* Info is indicative, not an investment advice.'}</div>
+                    <div class="board-badge ${ipo.board.toLowerCase()}">${ipo.board.toUpperCase()}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function fetchIPOsFromFirebase() {
+            try {
+                const snap = await get(ref(db, "ipos"));
+                const data = snap.val();
+                if (data) {
+                    const firebaseList = Object.entries(data).map(([key, val]) => ({
+                        ...val,
+                        id: key,
+                        openDate: val.open || "",
+                        closeDate: val.close || "",
+                        allotment: val.allotment || "",
+                        listing: val.listing || "",
+                        lotSize: val.lot || "",
+                        subscribers: val.subs || ""
+                    }));
+                    if (firebaseList.length > 0) IPO_LIST = firebaseList;
+                }
+            } catch (error) { console.error("Firebase error:", error); }
+            finally { applyFilter(); }
+        }
+
+        function applyFilter() {
+            const mainboardChecked = document.getElementById('mainboard-filter').checked;
+            const smeChecked = document.getElementById('sme-filter').checked;
+            let filtered = IPO_LIST.filter(ipo => {
+                const statusMatch = ipo.status.toLowerCase() === currentFilter;
+                const boardMatch = (mainboardChecked && ipo.board.toLowerCase() === 'mainboard') ||
+                    (smeChecked && ipo.board.toLowerCase() === 'sme');
+                return statusMatch && boardMatch;
+            });
+            const badge = document.getElementById('filter-badge');
+            if (!mainboardChecked || !smeChecked) {
+                const activeBoards = [];
+                if (mainboardChecked) activeBoards.push('Mainboard');
+                if (smeChecked) activeBoards.push('SME');
+                badge.textContent = `Filtered by ${activeBoards.join(' & ')}`;
+                badge.style.display = 'block';
+            } else { badge.style.display = 'none'; }
+            renderIPOs(filtered);
+        }
+
+        // Pull to Refresh Logic
+        let touchStart = 0;
+        let pulling = false;
+        const container = document.body;
+        const ptrIndicator = document.getElementById('ptr-indicator');
+        const ptrText = document.getElementById('ptr-text');
+
+        container.addEventListener('touchstart', (e) => {
+            if (window.scrollY <= 0) {
+                touchStart = e.touches[0].pageY;
+                pulling = true;
+            } else {
+                pulling = false;
+            }
+        });
+
+        container.addEventListener('touchmove', (e) => {
+            if (!pulling) return;
+            const currentY = e.touches[0].pageY;
+            const diff = currentY - touchStart;
+
+            // Only trigger pull-to-refresh if pulling down from the top
+            if (diff > 0 && window.scrollY <= 0) {
+                if (e.cancelable) e.preventDefault();
+                const translateY = Math.min(diff / 2, 70);
+                ptrIndicator.style.transform = `translateY(${translateY}px)`;
+                if (translateY > 50) ptrText.innerText = 'Release to refresh...';
+                else ptrText.innerText = 'Pull to refresh...';
+            } else {
+                // If pulling up or already scrolled, disable pulling state
+                pulling = false;
+                ptrIndicator.style.transform = '';
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', async () => {
+            if (!pulling) return;
+            pulling = false;
+            const ptrIndicatorStyle = window.getComputedStyle(ptrIndicator);
+            const matrix = new WebKitCSSMatrix(ptrIndicatorStyle.transform);
+            if (matrix.m42 > 50) {
+                document.body.classList.add('ptr-refreshing');
+                ptrText.innerText = 'Refreshing...';
+                await fetchIPOsFromFirebase();
+                setTimeout(() => {
+                    document.body.classList.remove('ptr-refreshing');
+                    ptrIndicator.style.transform = '';
+                    ptrText.innerText = 'Pull to refresh...';
+                }, 500);
+            } else {
+                ptrIndicator.style.transform = '';
+            }
+        });
+
+        // Expose functions
+        window.setFilter = (status) => {
+            currentFilter = status;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab[data-status="${status}"]`).classList.add('active');
+            applyFilter();
+        };
+        window.showToast = showToast;
+        window.openSearch = openSearch;
+        window.closeSearch = closeSearch;
+
+        function openSearch() {
+            const modal = document.getElementById('search-modal');
+            const input = document.getElementById('search-input');
+            modal.classList.add('active');
+            input.value = '';
+            input.focus();
+            renderSearchResults('');
+
+            input.oninput = (e) => renderSearchResults(e.target.value);
+        }
+
+        function closeSearch() {
+            document.getElementById('search-modal').classList.remove('active');
+        }
+
+        function renderSearchResults(query) {
+            const results = document.getElementById('search-results');
+            const filtered = query.trim() === '' ? IPO_LIST :
+                IPO_LIST.filter(ipo => ipo.name.toLowerCase().includes(query.toLowerCase()));
+
+            results.innerHTML = '';
+            filtered.forEach((ipo, index) => {
+                const card = document.createElement('div');
+                card.className = 'ipo-card';
+                card.onclick = () => {
+                    closeSearch();
+                    openModal(ipo);
+                };
+
+                card.innerHTML = `
+                    <div class="card-header" style="border:none; margin-bottom:0; padding-bottom:0; display:flex; align-items:center; gap:12px;">
+                        <div class="company-logo" style="width:50px; height:50px; border-radius:8px; ${ipo.logoUrl ? `background: white;` : `background: ${getLogoColor(index)};`}">
+                            ${ipo.logoUrl ? `<img src="${ipo.logoUrl}" style="width:100%; height:100%; object-fit:contain;">` : getInitials(ipo.name)}
+                        </div>
+                        <div class="card-title">
+                            <div class="company-name" style="font-size:16px; font-weight:700;">${ipo.name}</div>
+                            <div class="company-board" style="font-size:12px; color:var(--text-secondary);">${ipo.status.toUpperCase()} • ${ipo.board}</div>
+                        </div>
+                    </div>
+                `;
+                results.appendChild(card);
+            });
+        }
+
+        window.showNotifications = showNotifications;
+        window.closeNotif = closeNotif;
+
+        function showNotifications() {
+            document.getElementById('notif-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            fetchNotifications();
+        }
+
+        function closeNotif() {
+            document.getElementById('notif-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        async function fetchNotifications() {
+            const list = document.getElementById('notif-list');
+            try {
+                const snap = await get(ref(db, "notifications"));
+                const data = snap.val() || {};
+
+                if (!localStorage.getItem('userJoinedAt')) {
+                    localStorage.setItem('userJoinedAt', Date.now());
+                }
+                const joinedAt = parseInt(localStorage.getItem('userJoinedAt'));
+
+                const dismissed = JSON.parse(localStorage.getItem('dismissedNotifs') || '[]');
+                const notifs = Object.entries(data)
+                    .map(([id, n]) => ({ ...n, id }))
+                    .filter(n => n.timestamp > joinedAt && !dismissed.includes(n.id))
+                    .reverse();
+
+                if (notifs.length === 0) {
+                    list.innerHTML = '<div class="muted" style="padding:20px; text-align:center;">No recent updates</div>';
+                    return;
+                }
+
+                list.innerHTML = notifs.map(n => {
+                    let icon = '📢';
+                    const dateStr = new Date(n.timestamp).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                    return `
+                    <div class="notification-item" id="notif-${n.id}" 
+                         style="padding: 16px; position: relative; border-bottom: 1px solid var(--border-color); cursor: pointer;"
+                         onclick="openModalByNotification('${n.ipoName}')">
+                        <button onclick="event.stopPropagation(); dismissNotification('${n.id}')" style="position:absolute; right:12px; top:12px; background:var(--bg-card); border:1px solid var(--border-color); color:var(--text-muted); width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; z-index: 10;">&times;</button>
+                        <div class="notification-content">
+                            <div class="notification-title" style="font-size: 15px;">
+                                <span>${icon}</span>
+                                <span>${n.ipoName || 'IPO Update'}</span>
+                            </div>
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-top: 6px;">
+                                ${n.message}
+                            </div>
+                            <div class="notification-time">📢 ${dateStr}</div>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (e) {
+                list.innerHTML = '<div class="muted" style="padding:20px; text-align:center;">Error loading updates</div>';
+            }
+        }
+
+        window.dismissNotification = (id) => {
+            const dismissed = JSON.parse(localStorage.getItem('dismissedNotifs') || '[]');
+            dismissed.push(id);
+            localStorage.setItem('dismissedNotifs', JSON.stringify(dismissed));
+            const el = document.getElementById(`notif-${id}`);
+            if (el) el.style.display = 'none';
+        };
+
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+
+        function openModal(ipo) {
+            const modal = document.getElementById('detail-modal');
+            const modalBody = document.getElementById('modal-body');
+            document.getElementById('modal-company-name').textContent = ipo.name;
+
+            modalBody.innerHTML = `
+                <div class="detail-section">
+                    <div class="section-title">IPO Details</div>
+                    <div class="detail-row"><span class="detail-label">Total Issue Size</span><span class="detail-value">${ipo.issueSize || "—"}</span></div>
+                    <div class="detail-row"><span class="detail-label">Price Band</span><span class="detail-value">₹${(ipo.priceBand || "—").replace('Rs.', '').replace('Rs', '').trim()}</span></div>
+                    <div class="detail-row"><span class="detail-label">Lot Size</span><span class="detail-value">${ipo.lotSize || "—"}</span></div>
+                    <div class="detail-row"><span class="detail-label">Listing At</span><span class="detail-value">${ipo.exchange || "—"}</span></div>
+                </div>
+                <div class="detail-section">
+                    <div class="section-title">Subscription Details</div>
+                    <table class="detail-table">
+                        <thead><tr><th>Category</th><th>Times</th></tr></thead>
+                        <tbody>
+                            <tr><td>QIB</td><td>${ipo.qib || "—"}</td></tr>
+                            <tr><td>NII</td><td>${ipo.nii || "—"}</td></tr>
+                            <tr><td>Retail</td><td>${ipo.retail || "—"}</td></tr>
+                            <tr><td><strong>Total</strong></td><td><strong>${ipo.subscribers || "—"}</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        window.openModalById = (id) => {
+            const ipo = IPO_LIST.find(i => i.id === id);
+            if (ipo) openModal(ipo);
+        };
+
+        window.openModalByNotification = (ipoName) => {
+            closeNotif();
+            const ipo = IPO_LIST.find(i => i.name.toLowerCase().includes(ipoName.toLowerCase()));
+            if (ipo) openModal(ipo);
+        };
+
+        window.shareByIpoId = (id, event) => {
+            event.stopPropagation();
+            const ipo = IPO_LIST.find(i => i.id === id);
+            if (!ipo) return;
+            const text = `${ipo.name} IPO\nGMP: ${ipo.gmp}\nPrice: ${ipo.priceBand}\nApp: IPO JSS`;
+            if (navigator.share) {
+                navigator.share({ title: ipo.name, text: text });
+            } else {
+                navigator.clipboard.writeText(text);
+                showToast('Copied to clipboard!');
+            }
+        };
+
+        let currentLiveIpoId = null;
+        let currentLiveExchange = 'NSE';
+
+        window.openLiveWatch = (id) => {
+            currentLiveIpoId = id;
+            currentLiveExchange = 'NSE';
+            updateLiveModal();
+            document.getElementById('live-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeLiveModal = () => {
+            document.getElementById('live-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        window.switchExchange = (ex) => {
+            currentLiveExchange = ex;
+            document.getElementById('tab-nse').classList.toggle('active', ex === 'NSE');
+            document.getElementById('tab-bse').classList.toggle('active', ex === 'BSE');
+            updateLiveModal();
+        };
+
+        function updateLiveModal() {
+            const ipo = IPO_LIST.find(i => i.id === currentLiveIpoId);
+            if (!ipo) return;
+            document.getElementById('live-ticker-name').textContent = ipo.ticker || ipo.name.substring(0, 8).toUpperCase();
+            document.getElementById('live-ticker-full').textContent = ipo.name;
+            document.getElementById('live-price').textContent = `₹ ${ipo.currentPrice || '0.00'}`;
+            document.getElementById('live-change').textContent = `+${ipo.currentGains || '0.00%'}`;
+        }
+
+        window.applyFilter = applyFilter;
+        window.setFilter = (status) => {
+            currentFilter = status;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab[data-status="${status}"]`).classList.add('active');
+            applyFilter();
+        };
+
+        fetchIPOsFromFirebase();
+    </script>
+</body>
+
+</html>
